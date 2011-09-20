@@ -3,7 +3,7 @@
 ##              -= YOU MAY NOT REMOVE OR CHANGE THIS NOTICE =-                 ##
 ## --------------------------------------------------------------------------- ##
 ##  Filename       db_MYSQL.php                                                ##
-##  Developed by:  Dzoki & Dixie                                               ##
+##  Developed by:  ByTravianWars                                               ##
 ##  License:       TravianX Project                                            ##
 ##  Copyright:     TravianX (c) 2010-2011. All rights reserved.                ##
 ##                                                                             ##
@@ -305,10 +305,15 @@ class MYSQL_DB {
 	function addVillage($wid,$uid,$username,$capital) {
 		$total = count($this->getVillagesID($uid));
 		if ($total >= 1) {
-		$vname = $username."\'s village ".($total+1);
+		$vname = $username."\'s köyü ".($total+1);
 		}
-		else {
-			$vname = $username."\'s village";
+		else if ($username == "Nature") {
+        $vname = "Bos Vaha"; 
+        }
+        else if ($username == "WW") {
+        $vname = "Dunya Harikası"; 
+        } else {
+			$vname = $username."\'s köyü";
 		} 
 		$time = time();
 		$q = "INSERT into ".TB_PREFIX."vdata (wref, owner, name, capital, pop, cp, celebration, wood, clay, iron, maxstore, crop, maxcrop, lastupdate, created) values 
@@ -316,6 +321,16 @@ class MYSQL_DB {
 		return mysql_query($q, $this->connection) or die(mysql_error());
 	}
 	
+    function addOasis($wid,$uid,$username) {
+        if ($username == "Nature") {
+        $vname = "Boş Vaha"; 
+        }
+        $time = time();
+        $q = "INSERT into ".TB_PREFIX."vdata (wref, owner, name, capital, pop, cp, celebration, wood, clay, iron, maxstore, crop, maxcrop, lastupdate, created) values 
+        ('$wid', '$uid', '$vname', '0', 200, 1, 0, 350000, 350000, 350000, 350000, 350000, 350000, '$time', '$time')";
+        return mysql_query($q, $this->connection) or die(mysql_error());               
+        } 
+
 	function addResourceFields($vid,$type) {
 		switch($type) {
 			case 1:
@@ -377,11 +392,11 @@ class MYSQL_DB {
 		$q = "SELECT oasistype,occupied FROM ".TB_PREFIX."wdata where id = $wref";
 		$result = mysql_query($q, $this->connection);
 		$dbarray = mysql_fetch_array($result);
-	    if($dbarray['occupied'] != 0 || $dbarray['oasistype'] != 0){
-			return true;
-		}else{
-			return false;
-		}
+        if($dbarray['occupied'] != 0 || $dbarray['oasistype'] != 0){
+            return true;
+        }else{
+            return false;
+        }
 	}
 	
 	function getProfileVillages($uid) {
@@ -439,7 +454,109 @@ class MYSQL_DB {
 		$q = "SELECT * FROM ".TB_PREFIX."odata where conqured = $vid";
 		$result = mysql_query($q, $this->connection);
 		return $this->mysql_fetch_all($result);
-	}
+	} 
+    
+    function poulateOasisUnitsLow() {
+        $q2 = "SELECT * FROM ".TB_PREFIX."wdata where oasistype != 0";
+        $result2 = mysql_query($q2, $this->connection);
+            while($row=mysql_fetch_array($result2)){
+        $wid = $row['id'];
+        $basearray = $this->getMInfo($wid);
+        //each Troop is a Set for oasis type like mountains have rats spiders and snakes fields tigers elphants clay wolves so on stonger one more not so less
+        switch($basearray['oasistype']) {
+        case 1:
+        case 2:
+        //+25% lumber per hour
+        $q = "UPDATE ".TB_PREFIX."units SET u36 = u36 + '12', u37 = u37 + '8' WHERE vref = '".$wid."' AND u36 <= '2' AND u37 <= '2'";
+        $result = mysql_query($q, $this->connection);
+        break;
+        case 3:
+        //+25% lumber and +25% crop per hour
+        $q = "UPDATE ".TB_PREFIX."units SET u36 = u36 + '15', u37 = u37 + '8', u38 = u38 + '5' WHERE vref = '".$wid."' AND u36 <= '2' AND u37 <= '2' AND u38 <='2'";
+        $result = mysql_query($q, $this->connection);
+        break;
+        case 4:
+        case 5:
+        //+25% clay per hour
+        $q = "UPDATE ".TB_PREFIX."units SET u36 = u36 + '12', u37 = u37 + '8' WHERE vref = '".$wid."' AND u36 <= '2' AND u37 <= '2'"; 
+        $result = mysql_query($q, $this->connection);
+        break;
+        case 6:
+        //+25% clay and +25% crop per hour
+        $q = "UPDATE ".TB_PREFIX."units SET u36 = u36 + '15', u37 = u37 + '8', u38 = u38 + '5' WHERE vref = '".$wid."' AND u36 <= '2' AND u37 <= '2' AND u38 <='2'";    
+        $result = mysql_query($q, $this->connection);
+        break;
+        case 7:
+        case 8:
+        //+25% iron per hour
+        $q = "UPDATE ".TB_PREFIX."units SET u31 = u31 + '10', u32 = u32 + '3', u34 = u34 + '5' WHERE vref = '".$wid."' AND u31 <= '2' AND u32 <= '2'";
+        $result = mysql_query($q, $this->connection);
+        break;
+        case 9:
+        //+25% iron and +25% crop
+        $q = "UPDATE ".TB_PREFIX."units SET u31 = u31 + '15', u32 = u32 + '5', u34 = u34 + '10' WHERE vref = '".$wid."' AND u31 <= '2' AND u32 <= '2' AND u34 <='2'";    
+        $result = mysql_query($q, $this->connection); 
+        break;
+        case 10:
+        case 11:
+        //+25% crop per hour
+        $q = "UPDATE ".TB_PREFIX."units SET u33 = u33 + '10', u37 = u37 + '5', u38 = u38 + '3' WHERE vref = '".$wid."' AND u33 <= '2' AND u37 <= '2' AND u38 <='2'"; 
+        $result = mysql_query($q, $this->connection); 
+        break;
+        case 12:
+        //+50% crop per hour
+        $q = "UPDATE ".TB_PREFIX."units SET u33 = u33 + '15', u37 = u37 + '8', u38 = u38 + '5', u39 = u39 + '2' WHERE vref = '".$wid."' AND u33 <= '2' AND u37 <= '2' AND u38 <='2'AND u38 <='2'"; 
+        $result = mysql_query($q, $this->connection); 
+        break;
+        }
+        }
+    }
+    function CreateWWVillages($oid) {
+        for($i=1;$i<=10;$i++) {
+   
+        $kid = rand(1,4);
+       
+        $wid = $this->generateBase($kid);
+        $this->setFieldTaken($wid);
+        $this->addVillage($wid,$oid,"Dünya Harikası",0);
+        $this->addResourceFields($wid,99);
+        $this->addUnits($wid);
+        $this->addTech($wid);
+        $this->addABTech($wid);
+        $q = "UPDATE ".TB_PREFIX."units SET u41 = u41 + '30000', u42 = u42 + '30000', u43 = u43 + '30000', u44 = u44 + '30000', u45 = u45 + '30000', u46 = u46 + '30000', u47 = u47 + '30000', u48 = u48 + '30000', u49 = u49 + '30000', u50 = u50 + '1500' WHERE vref = '".$wid."'"; 
+        $result = mysql_query($q, $this->connection); 
+        }
+    }
+    
+    function CreateNatarVillage($oid) {
+        // add some random fields to make natars
+        for($i=1;$i<=10;$i++) {
+   
+        $kid = rand(1,4);
+       
+        $wid = $this->generateBase($kid);
+        $this->setFieldTaken($wid);
+        $this->addVillage($wid,$oid,"Nartars",1);
+        $this->addResourceFields($wid,1);
+        $this->addUnits($wid);
+        $this->addTech($wid);
+        $this->addABTech($wid);
+        }
+       
+    }
+    
+    function poulateOasis($oid) {
+        $q = "SELECT * FROM ".TB_PREFIX."wdata where oasistype != 0";
+        $result = mysql_query($q, $this->connection);
+            while($row=mysql_fetch_array($result)){
+        $wid = $row['id'];
+        $this->addOasis($wid,$oid,"Nature");
+        $this->addResourceFields($wid,1);
+        $this->addUnits($wid);
+        $this->addTech($wid);
+        $this->addABTech($wid);
+        }
+    } 
 	
 	function getOasisInfo($wid) {
 		$q = "SELECT * FROM ".TB_PREFIX."odata where wref = $wid";
@@ -1333,7 +1450,7 @@ class MYSQL_DB {
 	}
 	
 	function addAttack($vid,$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9,$t10,$t11,$type,$ctar1,$ctar2,$spy) {
-            $q = "INSERT INTO ".TB_PREFIX."attacks values (0,$vid,$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9,$t10,$t11,$type,$ctar1,$ctar2,$spy)";
+			$q = "INSERT INTO ".TB_PREFIX."attacks values (0,$vid,$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9,$t10,$t11,$type,$ctar1,$ctar2,$spy)";
             mysql_query($q, $this->connection);
             return mysql_insert_id($this->connection);
     }
